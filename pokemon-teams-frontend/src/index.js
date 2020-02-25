@@ -1,6 +1,8 @@
 const BASE_URL = "http://localhost:3000"
 const TRAINERS_URL = `${BASE_URL}/trainers`
 const POKEMONS_URL = `${BASE_URL}/pokemons`
+// document.addEventListener()
+
 
 fetch(TRAINERS_URL)
     .then(resp => resp.json())
@@ -22,60 +24,74 @@ function renderTrainerHTML(trainer) {
     document.querySelector("main").appendChild(div)
 
     
-    let ul = document.createElement("ul")
-    trainer.pokemons.forEach(pokemon => {
-        let li = document.createElement("li")
-        li.innerText = `${pokemon.nickname} (${pokemon.species})`
-        let button = document.createElement("button")
-        button.innerText = "Release"
-        button.classList.add("release")
-        button.setAttribute("data-pokemon-id", pokemon.id)
-        li.appendChild(button)
-        ul.appendChild(li)
-        
-        button.addEventListener("click", (e) => {
-            let pokemonId = e.target.dataset.pokemonId
-            fetch(`${POKEMONS_URL}/${pokemonId}`, {
-                method: "DELETE"
-            })
-            .then(li.remove())
-            
-        })
-    }) 
+  let ul = document.createElement("ul")
+  trainer.pokemons.forEach(pokemon => {
+    let li = document.createElement("li")
+    li.innerText = `${pokemon.nickname} (${pokemon.species})`
+    let button = document.createElement("button")
+    button.innerText = "Release"
+    button.classList.add("release")
+    button.setAttribute("data-pokemon-id", pokemon.id)
+    li.appendChild(button)
+    ul.appendChild(li)
+  }) 
     div.appendChild(ul)
+}
 
-    addPokemonButton.addEventListener("click", () => {
-        fetch(POKEMONS_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify({
-                trainer_id: trainer.id
-            })
-        })
-            .then(resp => resp.json())
-            .then(pokemon => {
-                
-                if (pokemon.error) {
-                    alert(pokemon.error)
-                }
-                else {
-                    let li = document.createElement("li")
-                    li.innerText = `${pokemon.nickname} (${pokemon.species})`
-                    let button = document.createElement("button")
-                    button.innerText = "Release"
-                    button.setAttribute("data-pokemon-id", `${pokemon.id}`)
-                    button.classList.add("release")
-                    li.appendChild(button)
-                    ul.appendChild(li) 
-                }
-                
-            })
+
+function addPokemons(event) {
+  let trainerId = event.target.dataset.trainerId
+    fetch(POKEMONS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        trainer_id: trainerId
+      })
+    })
+      .then(resp => resp.json())
+      .then(pokemon => {
+        console.log("e", event)
+        if (pokemon.error) {
+          alert(pokemon.error)
+        }
+        else {
+          let li = document.createElement("li")
+          li.innerText = `${pokemon.nickname} (${pokemon.species})`
+          let button = document.createElement("button")
+          button.innerText = "Release"
+          button.setAttribute("data-pokemon-id", `${pokemon.id}`)
+          button.classList.add("release")
+          li.appendChild(button)
+          event.target.parentElement.querySelector("ul").appendChild(li)
+        }
     })
 }
 
+function handleDelete(event) {
+  let pokemonId = event.target.dataset.pokemonId
+  fetch(`${POKEMONS_URL}/${pokemonId}`, {
+    method: "DELETE"
+  })
+    .then(resp => resp.json())
+    .then(json => {
+      event.target.parentElement.remove()
+  })              
+}
+
+function attachListenners() {
+  document.querySelector("main").addEventListener("click", (event) => {
+      let buttonText = event.target.innerText
+      if (buttonText === "Release") {
+          handleDelete(event)  
+      } else if (buttonText === "Add Pokemon"){
+        addPokemons(event)
+      }
+  })
+}
+attachListenners()
 
 
 
